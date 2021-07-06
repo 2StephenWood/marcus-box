@@ -12,7 +12,7 @@ enum led_e {
   PUSHBUTTON_LED_3,
   PUSHBUTTON_LED_4,
   LED_COUNT
-}
+};
 
 // physical pins
 const int decoraSwitch = A2;
@@ -34,10 +34,10 @@ const int ledVcc4 = 1;
 //const int pushButton4 = 0;
 
 // global variables
-int ledStates[LED_COUNT] = 0;
+int ledStates[LED_COUNT] = {0};
 
 // function prototypes
-void setLed(int led, boolean on);
+void setLed(enum led_e led, bool on);
 
 void setup() {
   // initialize the switches:
@@ -58,40 +58,41 @@ void setup() {
 
   // test matrix
   for(int i = 0; i < 10; i++){
-    setLed(i, True);
-    setLed(i, False);
+    setLed(i, true);
+    setLed(i, false);
   }
 }
 
 
 void loop() {
-  if(digitalRead(decoraSwitch)){
-    digitalWrite(decoraGreenLed, HIGH);
-    digitalWrite(decoraRedLed, LOW);
-  } else {
-    digitalWrite(decoraGreenLed, LOW);
-    digitalWrite(decoraRedLed, HIGH);
-  }
-  if(digitalRead(leftToggleSwitch)){
-    digitalWrite(leftToggleGreenLed, LOW);
-    digitalWrite(leftToggleRedLed, HIGH);
-  } else {
-    digitalWrite(leftToggleGreenLed, HIGH);
-    digitalWrite(leftToggleRedLed, LOW);
-  }
-  if(digitalRead(rightToggleSwitch)){
-    digitalWrite(rightToggleGreenLed, LOW);
-    digitalWrite(rightToggleRedLed, HIGH);
-  } else {
-    digitalWrite(rightToggleGreenLed, HIGH);
-    digitalWrite(rightToggleRedLed, LOW);
-  }
+  //original code before switching to LED matrix:
+//  if(digitalRead(decoraSwitch)){
+//    digitalWrite(decoraGreenLed, HIGH);
+//    digitalWrite(decoraRedLed, LOW);
+//  } else {
+//    digitalWrite(decoraGreenLed, LOW);
+//    digitalWrite(decoraRedLed, HIGH);
+//  }
+//  if(digitalRead(leftToggleSwitch)){
+//    digitalWrite(leftToggleGreenLed, LOW);
+//    digitalWrite(leftToggleRedLed, HIGH);
+//  } else {
+//    digitalWrite(leftToggleGreenLed, HIGH);
+//    digitalWrite(leftToggleRedLed, LOW);
+//  }
+//  if(digitalRead(rightToggleSwitch)){
+//    digitalWrite(rightToggleGreenLed, LOW);
+//    digitalWrite(rightToggleRedLed, HIGH);
+//  } else {
+//    digitalWrite(rightToggleGreenLed, HIGH);
+//    digitalWrite(rightToggleRedLed, LOW);
+//  }
 }
 
-void setLed(enum led_e led, boolean on) {
-  ledState[led] = on;
+void setLed(enum led_e led, bool on) {
+  ledStates[led] = on;
   switch(led){
-    case DECORA_GREEN_LED,
+    case DECORA_GREEN_LED:
       if(on){
         digitalWrite(ledGnd1, LOW);
       }
