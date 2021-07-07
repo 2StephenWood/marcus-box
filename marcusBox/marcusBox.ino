@@ -14,18 +14,21 @@ enum led_e {
   LED_COUNT
 };
 
+// types
+typedef struct led_map_s {
+  uint8_t gndLine;
+  uint8_t vccLine;
+} led_map_t;
+
 // physical pins
 const int decoraSwitch = A2;
 const int leftToggleSwitch = 12;
 const int rightToggleSwitch = 2;
 
-const int ledGnd1 = PIN_A1;
-const int ledGnd2 = PIN_A0;
-const int ledGnd3 = 6;
-const int ledVcc1 = PIN_A3;
-const int ledVcc2 = 7;
-const int ledVcc3 = 0;
-const int ledVcc4 = 1;
+const int LED_VCC_LINE_CNT = 4;
+const int vccPins[LED_VCC_LINE_CNT] = {A3, 7, 0, 1};
+const int LED_GND_LINE_CNT = 3;
+const int gndPins[LED_GND_LINE_CNT] = {A1, A0, 6};
 
 //tbd
 //const int pushButton1 = 0;
@@ -34,7 +37,19 @@ const int ledVcc4 = 1;
 //const int pushButton4 = 0;
 
 // global variables
-int ledStates[LED_COUNT] = {0};
+led_map_t ledMap[LED_COUNT] = {
+    /* DECORA_GREEN_LED */       {0, 0},
+    /* DECORA_RED_LED */         {0, 0},
+    /* LEFT_TOGGLE_GREEN_LED */  {0, 0},
+    /* LEFT_TOGGLE_RED_LED */    {0, 0},
+    /* RIGHT_TOGGLE_GREEN_LED */ {0, 0},
+    /* RIGHT_TOGGLE_RED_LED */   {0, 0},
+    /* PUSHBUTTON_LED_1 */       {0, 0},
+    /* PUSHBUTTON_LED_2 */       {0, 0},
+    /* PUSHBUTTON_LED_3 */       {0, 0},
+    /* PUSHBUTTON_LED_4 */       {0, 0}
+};
+int ledStates[LED_VCC_LINE_CNT][LED_GND_LINE_CNT] = {0};
 
 // function prototypes
 void setLed(enum led_e led, bool on);
@@ -45,21 +60,22 @@ void setup() {
   pinMode(leftToggleSwitch, INPUT_PULLUP);
   pinMode(rightToggleSwitch, INPUT_PULLUP);
 
-  // initialize the LEDs matrix rows and cols
-  pinMode(ledGnd1, OUTPUT);
-  pinMode(ledGnd2, OUTPUT);
-  pinMode(ledGnd3, OUTPUT);
-  pinMode(ledVcc1, OUTPUT);
-  pinMode(ledVcc2, OUTPUT);
-  pinMode(ledVcc3, OUTPUT);
-  pinMode(ledVcc4, OUTPUT);
+  // initialize the LED grounds and Vcc pins
+  for(int i=0; i < sizeof(vccPins); i++){
+    pinMode(vccPins[i], OUTPUT);
+  }
+  for(int i=0; i < sizeof(gndPins); i++){
+    pinMode(gndPins[i], OUTPUT);
+  }
+  
   // initialize serial communication:
   Serial.begin(9600);
 
   // test matrix
-  for(int i = 0; i < 10; i++){
-    setLed(i, true);
-    setLed(i, false);
+  for(int i = 0; i < LED_COUNT; i++){
+    setLed((enum led_e)i, true);
+    delay(500);
+    setLed((enum led_e)i, false);
   }
 }
 
@@ -89,41 +105,30 @@ void loop() {
 //  }
 }
 
-void setLed(enum led_e led, bool on) {
-  ledStates[led] = on;
-  switch(led){
-    case DECORA_GREEN_LED:
-      if(on){
-        digitalWrite(ledGnd1, LOW);
+void refreshLeds() {
+  // iterate over the rows (anodes):
+  for (int thisVcc = 0; thisVcc < LED_VCC_LINE_CNT; thisVcc++) {
+    // take the Vcc pin (anode) high:
+    digitalWrite(vccPins[thisVcc], HIGH);
+    // iterate over the ground lines (cathodes):
+    for (int thisGnd = 0; thisGnd < LED_GND_LINE_CNT; thisGnd++) {
+      // get the state of the current LED;
+      int thisLed = ledStates[thisVcc][thisGnd];
+      // when the Vcc is HIGH and the ground is LOW,
+      // the LED where they meet turns on:
+      digitalWrite(gndPins[thisGnd], thisLed);
+      // turn the LED off:
+      if (thisLed == LOW) {
+        digitalWrite(gndPins[thisGnd], HIGH);
       }
-      break;
-    case DECORA_RED_LED:
-      digitalWrite(ledGnd2, LOW);
-      break;
-    case LEFT_TOGGLE_GREEN_LED:
-      digitalWrite(ledGnd3, LOW);
-      break;
-    case LEFT_TOGGLE_RED_LED:
-      digitalWrite(ledGnd3, LOW);
-      break;
-    case RIGHT_TOGGLE_GREEN_LED:
-      digitalWrite(ledGnd3, LOW);
-      break;
-    case RIGHT_TOGGLE_RED_LED:
-      digitalWrite(ledGnd3, LOW);
-      break;
-    case PUSHBUTTON_LED_1:
-      digitalWrite(ledGnd3, LOW);
-      break;
-    case PUSHBUTTON_LED_2:
-      digitalWrite(ledGnd3, LOW);
-      break;
-    case PUSHBUTTON_LED_3:
-      digitalWrite(ledGnd3, LOW);
-      break;
-    case PUSHBUTTON_LED_4:
-      digitalWrite(ledGnd3, LOW);
-      break;
-    
+    }
+    // take the Vcc pin low to turn off the whole row:
+    digitalWrite(vccPins[thisVcc], LOW);
   }
+}
+
+void setLed(enum led_e led, bool on) {
+  int thisVcc = ledMap[led].vccLine;
+  int thisGnd = ledMap[led].gndLine;
+  ledStates[thisVcc][thisGnd] = on;
 }
