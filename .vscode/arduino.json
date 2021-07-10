@@ -1,5 +1,7 @@
 {
     "board": "arduino:avr:uno",
-    "programmer": "arduino:arduinoisp",
-    "sketch": "marcusBox\\marcusBox.ino"
+    "output": "../build",
+    "programmer": "ArduinoISP",
+    "sketch": "marcusBox\\marcusBox.ino",
+    "port": "COM9"
 }
